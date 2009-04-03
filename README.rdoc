@@ -1,0 +1,7 @@
+= klarlack
+
+Description goes here.
+
+== Copyright
+
+Copyright (c) 2009 Max Schöfmann. See LICENSE for details.
