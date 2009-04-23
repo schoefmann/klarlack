@@ -6,6 +6,10 @@ See also: http://www.varnish-cache.org
 
 Please note: You need at least version 2.0.3 of varnish for purging to work.
 
+=== Installation
+
+  sudo gem install schoefmax-klarlack --source=http://gems.github.com
+
 === Example
 
 Lets purge all blog posts from the cache...
@@ -29,6 +33,10 @@ Start up a local varnishd with <tt>-T 127.0.0.1:6082</tt>. Then run
 
 * Support authentication when varnishd is started with <tt>-S</tt>
 * Make parameter manipulation/display more friendly
+
+=== WTF?
+
+http://dict.leo.org/?search=klarlack
 
 === Copyright
 

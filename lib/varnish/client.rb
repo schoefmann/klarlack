@@ -11,18 +11,25 @@ module Varnish
       :timeout    => 1
     }
 
-    # timeout in seconds when connecting to varnishd
+    # timeout in seconds when connecting to varnishd. Default is 1
     attr_accessor :timeout
 
-    # set to true, to keep the connection alive
+    # set to true, to keep the connection alive. Default is false
     attr_accessor :keep_alive
 
-    # hostname or IP-address of varnishd
+    # hostname or IP-address of varnishd. Default is "localhost"
     attr_accessor :host
 
-    # port number of varnishd
+    # port number of varnishd. Default is 6082
     attr_accessor :port
 
+    # Examples:
+    # 
+    #   Client.new "127.0.0.1"
+    #   Client.new "mydomain.com:6082"
+    #   Client.new :timeout => 5
+    #   Client.new "10.0.0.3:6060", :timeout => nil, :keep_alive => true
+    #
     # === Configuration options
     #
     # +timeout+:: if specified (seconds), calls to varnish
@@ -49,7 +56,7 @@ module Varnish
         self.server = args[0]
         opts = args[1]
       else
-        raise ArgumentError, "wrong number of arguments (#{args.length} for 1"
+        raise ArgumentError, "wrong number of arguments (#{args.length} for 2)"
       end
 
       opts = DEFAULT_OPTS.merge(opts)

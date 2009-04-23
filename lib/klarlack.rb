@@ -4,5 +4,5 @@ require 'varnish/client'
 
 module Varnish
   class Error < StandardError; end
-  VERSION = '0.0.0'
+  VERSION = '0.0.1'
 end
