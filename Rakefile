@@ -5,7 +5,7 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "klarlack"
-    gem.summary = %Q{TODO}
+    gem.summary = %Q{ruby client for varnishd's admin interface}
     gem.email = "max@pragmatic-it.de"
     gem.homepage = "http://github.com/schoefmax/klarlack"
     gem.authors = ["Max Schöfmann"]

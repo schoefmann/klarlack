@@ -1,7 +1,35 @@
 = klarlack
 
-Description goes here.
+Klarlack is a ruby client library for the varnish administration interface.
 
-== Copyright
+See also: http://www.varnish-cache.org
 
-Copyright (c) 2009 Max Schöfmann. See LICENSE for details.
+Please note: You need at least version 2.0.3 of varnish for purging to work.
+
+=== Example
+
+Lets purge all blog posts from the cache...
+
+  require 'rubygems'
+  require 'klarlack'
+
+  varnish = Varnish::Client.new '127.0.0.1:6082'
+  # the regexp is not a ruby regexp, just a plain string varnishd understands
+  varnish.purge :url, "^/posts/.*"
+
+In a Rails app, you might want to use use this in a cache sweeper.
+
+=== Specs
+
+Start up a local varnishd with <tt>-T 127.0.0.1:6082</tt>. Then run
+
+  spec spec
+
+=== TODO
+
+* Support authentication when varnishd is started with <tt>-S</tt>
+* Make parameter manipulation/display more friendly
+
+=== Copyright
+
+Copyright (c) 2009 Max Schöfmann. Distributed under the MIT-License
