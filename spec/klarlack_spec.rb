@@ -21,8 +21,14 @@ describe Varnish::Client do
       @varnish.connected?.should be_true
     end
 
+    it 'should use timeouts when sending commands' do
+      Varnish::SocketFactory::Timer.should_receive(:timeout).and_return("200 0")
+      @varnish.timeout = 10
+      @varnish.ping
+    end
+
     it 'should be possible to disable timeouts' do
-      Varnish::SocketFactory::Timer.should_not_receive(:timeout).and_return("200 0")
+      Varnish::SocketFactory::Timer.should_not_receive(:timeout)
       @varnish.timeout = nil
       @varnish.ping
     end
@@ -62,21 +68,36 @@ describe Varnish::Client do
 
   describe '(commands)' do
 
+    before(:each) do
+      ensure_started
+    end
+
     # ... the specs for #param, #purge and #vcl could be better ...
 
     it '#param should send the param command to varnishd' do
       @varnish.param(:show).should_not be_empty
     end
 
-    it '#purge should send the purge command to varnishd' do
-      @varnish.should_receive(:cmd).with("purge.url", ".*")
-      @varnish.purge :url, '.*'
-      @varnish.should_receive(:cmd).with("purge RxRequest", "foo")
-      @varnish.purge :RxRequest, "foo"
+    it '#purge should allow purging by url, hash and custom fields' do
+      @varnish.purge(:url, '^/articles/.*').should be_true
+      @varnish.purge(:hash, 12345).should be_true
+      @varnish.purge("req.http.host", "~", "www.example.com").should be_true
     end
 
-    it '#vcl should send the vcl command to varnishd' do
-      @varnish.vcl(:list).should_not be_empty
+    it '#purge with :list should return an array with queued purges' do
+      @varnish.purge(:url, '^/posts/.*')
+      list = @varnish.purge(:list)
+      list.last[0].should be_kind_of(Integer)
+      list.last[1].should == "req.url ~ ^/posts/.*"
+    end
+
+    it '#vcl with :list should return an array of VCL configurations' do
+      list = @varnish.vcl(:list)
+      list.should_not be_empty
+      list.should be_kind_of(Array)
+      list.first[0].should be_kind_of(String)
+      list.first[1].should be_kind_of(Integer)
+      list.first[2].should be_kind_of(String)
     end
 
     it '#ping should send a ping to the server and return a string containing the response' do
@@ -91,7 +112,7 @@ describe Varnish::Client do
     it "#stats should return a hash containing status information" do
       stats = @varnish.stats
       stats.should_not be_empty
-      stats.values.each {|v| v.should be_kind_of(Fixnum) }
+      stats.values.each {|v| v.should be_kind_of(Integer) }
       stats.keys.each {|k| k.should_not be_empty }
     end
 

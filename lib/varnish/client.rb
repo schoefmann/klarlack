@@ -25,10 +25,10 @@ module Varnish
 
     # Examples:
     # 
-    #   Client.new "127.0.0.1"
-    #   Client.new "mydomain.com:6082"
-    #   Client.new :timeout => 5
-    #   Client.new "10.0.0.3:6060", :timeout => nil, :keep_alive => true
+    #   Varnish::Client.new "127.0.0.1"
+    #   Varnish::Client.new "mydomain.com:6082"
+    #   Varnish::Client.new :timeout => 5
+    #   Varnish::Client.new "10.0.0.3:6060", :timeout => nil, :keep_alive => true
     #
     # === Configuration options
     #
@@ -88,11 +88,28 @@ module Varnish
     #  .vcl :list
     #  .vcl :show, <configname>
     #
+    # Returns an array of VCL configurations for :list, and the servers
+    # response as string otherwise
+    #
     # Ex.:
-    #   v = Varnish.new
+    #   v = Varnish::Client.new
+    #   v.vcl :list
+    #   #=> [["active", 0, "boot"]]
+    #   
     #   v.vcl :load, "newconf", "/etc/varnish/myconf.vcl"
+    #
+    # 
     def vcl(op, *params)
-      cmd("vcl.#{op}", *params)
+      response = cmd("vcl.#{op}", *params)
+      case op
+      when :list
+        response.split("\n").map do |line|
+          a = line.split(/\s+/, 3)
+          [a[0], a[1].to_i, a[2]]
+        end
+      else
+        response
+      end
     end
 
     # Purge objects from the cache or show the purge queue.
@@ -105,12 +122,28 @@ module Varnish
     # +op+:: :url, :hash, :list or a custom field
     # +regexp+:: a string containing a varnish compatible regexp
     #
+    # Returns true for purging, returns an array containing the purge queue
+    # for :list
+    #
     # Ex.:
-    #   v = Varnish.new
+    #   v = Varnish::Client.new
     #   v.purge :url, '.*'
+    #
+    #   v.purge :list
+    #   #=> [[1, "req.url ~ .*"]]
+    #
     def purge(op, *regexp_or_args)
       c = [:url, :hash, :list].include?(op) ? "purge.#{op}" : "purge #{op}"
-      cmd(c, *regexp_or_args)
+      response = cmd(c, *regexp_or_args)
+      case op
+      when :list
+        response.split("\n").map do |line|
+          a = line.split("\t")
+          [a[0].to_i, a[1]]
+        end
+      else
+        bool response
+      end
     end
 
     # Ping the server to keep the connection alive
@@ -119,6 +152,11 @@ module Varnish
     end
 
     # Returns a hash of status information
+    #
+    # Ex.:
+    #   v = Varnish::Client.new
+    #   v.stats
+    #   => {"Total header bytes"=>0, "Cache misses"=>0 ...}
     def stats
       result = cmd("stats")
       Hash[*result.split("\n").map { |line|
