@@ -6,9 +6,9 @@ See also: http://www.varnish-cache.org
 
 Please note: You need at least version 2.0.3 of varnish for purging to work.
 
-=== Installation
+=== Installation (from gemcutter.org)
 
-  sudo gem install schoefmax-klarlack --source=http://gems.github.com
+  sudo gem install klarlack
 
 === Example
 
