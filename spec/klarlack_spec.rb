@@ -117,6 +117,17 @@ describe Varnish::Client do
     end
 
   end
+
+  describe '(regression)' do
+
+    it '#purge.hash with regex containing backslashes should be escaped properly' do
+      test_regex = '/home\?x=1'
+      @varnish.purge :hash, test_regex
+      list = @varnish.purge :list
+      list.flatten.join.should include(test_regex)
+    end
+
+  end
   
   describe '(daemon lifecycle)' do
     

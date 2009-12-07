@@ -1,4 +1,5 @@
 module Varnish
+  class Error < StandardError; end
   class Client
     # Default management port of varnishd
     DEFAULT_PORT = 6082
@@ -219,7 +220,7 @@ module Varnish
     def cmd(name, *params)
       @mutex.synchronize do
         connect unless connected?
-        @conn.write "#{name} #{params.join(' ')}\n"
+        @conn.write "#{name} #{params.join(' ').gsub('\\', '\\\\\\')}\n"
         status, length = @conn.gets.split # <status> <content_length>\n
         content = @conn.read(length.to_i + 1) # +1 = \n
         content.chomp!
