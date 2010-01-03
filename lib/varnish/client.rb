@@ -1,5 +1,7 @@
 module Varnish
   class Error < StandardError; end
+  class BrokenConnection < Error; end
+  class CommandFailed < Error; end
   class Client
     # Default management port of varnishd
     DEFAULT_PORT = 6082
@@ -215,16 +217,16 @@ module Varnish
     private
 
     # Sends a command to varnishd.
-    # Raises an Varnish::Error when a non-200 status is returned
+    # Raises a Varnish::CommandFailed error when a non-200 status is returned
     # Returns the response text
     def cmd(name, *params)
       @mutex.synchronize do
         connect unless connected?
         @conn.write "#{name} #{params.join(' ').gsub('\\', '\\\\\\')}\n"
-        status, length = @conn.gets.split # <status> <content_length>\n
-        content = @conn.read(length.to_i + 1) # +1 = \n
+        status, length = conn_gets.split # <status> <content_length>\n
+        content = conn_read(length.to_i + 1) # +1 = \n
         content.chomp!
-        raise Error, "Command #{name} returned with status #{status}: #{content}" if status.to_i != 200
+        raise CommandFailed, "Command #{name} returned with status #{status}: #{content}" if status.to_i != 200
         content
       end
     end
@@ -248,6 +250,14 @@ module Varnish
       end
 
       @conn
+    end
+
+    def conn_gets
+      @conn.gets || raise(BrokenConnection, "Expected to read one line from Varnish, got nil")
+    end
+
+    def conn_read(bytes)
+      @conn.read(bytes) || raise(BrokenConnection, "Expected to read #{bytes} bytes from Varnish, got nil")
     end
 
     # converts +value+ into a boolean

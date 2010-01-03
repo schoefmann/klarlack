@@ -128,6 +128,24 @@ describe Varnish::Client do
     end
 
   end
+
+  describe '(broken connection)' do
+
+    before(:each) do
+      fake_connection!(:connected => true, :return => "200 1\n")
+    end
+    
+    it 'should fail with a Varnish::Error when the connection does return nil for gets' do
+      @conn.stub!(:gets).and_return(nil)
+      lambda { @varnish.ping }.should raise_error(Varnish::BrokenConnection)
+    end
+
+    it 'should fail with a Varnish::Error when the connection does return nil for read' do
+      @conn.stub!(:read).and_return(nil)
+      lambda { @varnish.ping }.should raise_error(Varnish::BrokenConnection)
+    end
+
+  end
   
   describe '(daemon lifecycle)' do
     
@@ -142,12 +160,12 @@ describe Varnish::Client do
     
     it 'starting an already started daemon should raise an error' do
       ensure_started
-      lambda { @varnish.start }.should raise_error(Varnish::Error)
+      lambda { @varnish.start }.should raise_error(Varnish::CommandFailed)
     end
     
     it 'stopping an already stopped daemon should raise an error' do
       ensure_stopped
-      lambda { @varnish.stop }.should raise_error(Varnish::Error)
+      lambda { @varnish.stop }.should raise_error(Varnish::CommandFailed)
     end
     
   end
@@ -160,6 +178,20 @@ describe Varnish::Client do
   def ensure_stopped
     @varnish.stop if @varnish.running?
     while(!@varnish.stopped?) do sleep 0.1 end
+  end
+  
+  class FakeConn
+    attr_accessor :retval
+    def read(*args) @retval end
+    def gets(*args) @retval end
+    def write(str) str.to_s.size end
+  end
+
+  def fake_connection!(opts = {})
+    @conn = FakeConn.new
+    @conn.retval = opts[:return] || ''
+    @varnish.stub!(:connected?).and_return(opts[:connected] || false)
+    @varnish.instance_variable_set('@conn', @conn)
   end
 
 end
