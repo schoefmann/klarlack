@@ -82,6 +82,7 @@ describe Varnish::Client do
       @varnish.purge(:url, '^/articles/.*').should be_true
       @varnish.purge(:hash, 12345).should be_true
       @varnish.purge("req.http.host", "~", "www.example.com").should be_true
+      @varnish.purge("req.http.host ~ www.example.com").should be_true
     end
 
     it '#purge with :list should return an array with queued purges' do

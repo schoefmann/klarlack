@@ -117,13 +117,17 @@ module Varnish
 
     # Purge objects from the cache or show the purge queue.
     #
+    # Takes one or two arguments:
+    #
+    # 1.
     #  .purge :url, <regexp>
     #  .purge :hash, <regexp>
-    #  .purge :list
-    #  .purge <costum-field> <args>
     #
-    # +op+:: :url, :hash, :list or a custom field
-    # +regexp+:: a string containing a varnish compatible regexp
+    # <regexp> is a string containing a varnish compatible regexp
+    #
+    # 2.
+    #  .purge <costum-purge-conditions>
+    #  .purge :list
     #
     # Returns true for purging, returns an array containing the purge queue
     # for :list
@@ -132,14 +136,17 @@ module Varnish
     #   v = Varnish::Client.new
     #   v.purge :url, '.*'
     #
+    #   v.purge "req.http.host ~ www.foo.com && req.http.url ~ images"
+    #
     #   v.purge :list
     #   #=> [[1, "req.url ~ .*"]]
     #
-    def purge(op, *regexp_or_args)
-      c = [:url, :hash, :list].include?(op) ? "purge.#{op}" : "purge #{op}"
-      response = cmd(c, *regexp_or_args)
-      case op
-      when :list
+    def purge(*args)
+      c = 'purge'
+      c << ".#{args.shift}" if [:url, :hash, :list].include?(args.first)
+      response = cmd(c, *args)
+      case c
+      when 'purge.list'
         response.split("\n").map do |line|
           a = line.split("\t")
           [a[0].to_i, a[1]]
