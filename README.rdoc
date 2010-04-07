@@ -40,4 +40,4 @@ http://dict.leo.org/?search=klarlack
 
 === Copyright
 
-Copyright (c) 2009 Max Schöfmann. Distributed under the MIT-License
+Copyright (c) 2009-2010 Max Schöfmann. Distributed under the MIT-License
