@@ -12,7 +12,7 @@ module Varnish
       # http://ph7spot.com/articles/system_timer
       # We don't want to bother trying to load SystemTimer on jruby and
       # ruby 1.9+.
-      if !defined?(RUBY_ENGINE)
+      if RUBY_VERSION =~ /^1\.8\./ and RUBY_PLATFORM !~ /java/
         require 'system_timer'
         Timer = SystemTimer
       else
