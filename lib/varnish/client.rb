@@ -155,6 +155,46 @@ module Varnish
         bool response
       end
     end
+    
+    # Ban objects from the cache or show the ban queue.
+    #
+    # Takes one or two arguments:
+    #
+    # 1.
+    #  .ban :url, <regexp>
+    #
+    # <regexp> is a string containing a varnish compatible regexp
+    #
+    # 2.
+    #  .ban <costum-purge-conditions>
+    #  .ban :list
+    #
+    # Returns true for banning, returns an array containing the ban queue
+    # for :list
+    #
+    # Ex.:
+    #   v = Varnish::Client.new
+    #   v.ban :url, '.*'
+    #
+    #   v.ban "req.http.host ~ www.foo.com && req.http.url ~ images"
+    #
+    #   v.ban :list
+    #   #=> [[1, "req.url ~ .*"]]
+    #
+    def ban(*args)
+      c = 'ban'
+      c << ".#{args.shift}" if [:url, :list].include?(args.first)
+      response = cmd(c, *args)
+      case c
+      when 'ban.list'
+        response.split("\n").map do |line|
+          a = line.split("\t")
+          [a[0].to_i, a[1]]
+        end
+      else
+        bool response
+      end
+    end
 
     # Ping the server to keep the connection alive
     def ping(timestamp = nil)
