@@ -72,24 +72,39 @@ describe Varnish::Client do
       ensure_started
     end
 
-    # ... the specs for #param, #purge and #vcl could be better ...
+    # ... the specs for #param, #purge, #ban and #vcl could be better ...
 
     it '#param should send the param command to varnishd' do
       @varnish.param(:show).should_not be_empty
     end
 
-    it '#purge should allow purging by url, hash and custom fields' do
-      @varnish.purge(:url, '^/articles/.*').should be_true
-      @varnish.purge(:hash, 12345).should be_true
-      @varnish.purge("req.http.host", "~", "www.example.com").should be_true
-      @varnish.purge("req.http.host ~ www.example.com").should be_true
-    end
+    if ENV['VARNISH_3']
+      it '#ban should allow purging by url and custom fields' do
+        @varnish.ban(:url, '^/articles/.*').should be_true
+        @varnish.ban("req.http.host", "~", "www.example.com").should be_true
+        @varnish.ban("req.http.host ~ www.example.com").should be_true
+      end
 
-    it '#purge with :list should return an array with queued purges' do
-      @varnish.purge(:url, '^/posts/.*')
-      list = @varnish.purge(:list)
-      list.last[0].should be_kind_of(Integer)
-      list.last[1].should == "req.url ~ ^/posts/.*"
+      it '#ban with :list should return an array with queued purges' do
+        @varnish.ban(:url, '^/posts/.*')
+        list = @varnish.ban(:list)
+        list.last[0].should be_kind_of(Integer)
+        list.last[1].should == "req.url ~ ^/posts/.*"
+      end
+    else
+      it '#purge should allow purging by url, hash and custom fields' do
+        @varnish.purge(:url, '^/articles/.*').should be_true
+        @varnish.purge(:hash, 12345).should be_true
+        @varnish.purge("req.http.host", "~", "www.example.com").should be_true
+        @varnish.purge("req.http.host ~ www.example.com").should be_true
+      end
+
+      it '#purge with :list should return an array with queued purges' do
+        @varnish.purge(:url, '^/posts/.*')
+        list = @varnish.purge(:list)
+        list.last[0].should be_kind_of(Integer)
+        list.last[1].should == "req.url ~ ^/posts/.*"
+      end
     end
 
     it '#vcl with :list should return an array of VCL configurations' do
@@ -120,14 +135,15 @@ describe Varnish::Client do
   end
 
   describe '(regression)' do
-
-    it '#purge.hash with regex containing backslashes should be escaped properly' do
-      test_regex = '/home\?x=1'
-      @varnish.purge :hash, test_regex
-      list = @varnish.purge :list
-      list.flatten.join.should include(test_regex)
+    
+    unless ENV['VARNISH_3'] #doesn't look like ban takes a hash
+      it '#purge.hash with regex containing backslashes should be escaped properly' do
+        test_regex = '/home\?x=1'
+        @varnish.purge :hash, test_regex
+        list = @varnish.purge :list
+        list.flatten.join.should include(test_regex)
+      end
     end
-
   end
 
   describe '(broken connection)' do
