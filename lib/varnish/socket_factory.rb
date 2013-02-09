@@ -20,7 +20,7 @@ module Varnish
         Timer = Timeout
       end
     rescue LoadError => e
-      $stderr.puts "[klarlack] Could not load SystemTimer gem, falling back to Ruby's slower/unsafe timeout library: #{e.message}"
+      #$stderr.puts "[klarlack] Could not load SystemTimer gem, falling back to Ruby's slower/unsafe timeout library: #{e.message}"
       require 'timeout'
       Timer = Timeout
     end
